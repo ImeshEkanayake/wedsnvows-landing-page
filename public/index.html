@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weds & Vows | Coming Soon to Sri Lanka</title>
+    <meta
+      name="description"
+      content="wedsnvows.com is coming soon to Sri Lanka by early August. Share what you want from a wedding planning app."
+    />
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header" aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="Weds & Vows home">
+        <span class="brand-mark">W&V</span>
+        <span>wedsnvows.com</span>
+      </a>
+      <a class="header-action" href="#suggestions">Share your ideas</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-media" aria-hidden="true">
+          <img
+            src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1800&q=85"
+            alt=""
+          />
+        </div>
+        <div class="hero-content">
+          <p class="eyebrow">Coming soon in Sri Lanka by early August</p>
+          <h1>Weds & Vows</h1>
+          <p class="hero-copy">
+            A wedding planning app for couples, families, and vendors who want a calmer way to plan the big day.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-action" href="#suggestions">Tell us what you need</a>
+            <a class="secondary-action" href="https://wedsnvows.com">wedsnvows.com</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="intro" aria-labelledby="intro-title">
+        <div>
+          <p class="section-kicker">Built for local weddings</p>
+          <h2 id="intro-title">Help shape the first version before launch.</h2>
+        </div>
+        <p>
+          We are collecting early suggestions from couples and wedding professionals across Sri Lanka.
+          Tell us what would actually make planning easier, from vendor discovery and budget tracking to
+          guest lists, packages, bookings, and reminders.
+        </p>
+      </section>
+
+      <section class="feature-strip" aria-label="Planned app areas">
+        <article>
+          <span>01</span>
+          <h3>Find vendors</h3>
+          <p>Venues, photographers, decorators, caterers, bridal services, entertainment, and more.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>Plan together</h3>
+          <p>Keep budgets, guests, tasks, and inspiration in one shared planning space.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>Book with clarity</h3>
+          <p>Compare packages, ask questions, save favourites, and track important decisions.</p>
+        </article>
+      </section>
+
+      <section class="feedback-section" id="suggestions" aria-labelledby="suggestions-title">
+        <div class="feedback-copy">
+          <p class="section-kicker">Early access feedback</p>
+          <h2 id="suggestions-title">What should a wedding app in Sri Lanka do beautifully?</h2>
+          <p>
+            Your comments will go straight into our launch planning. Share the features, frustrations,
+            or local wedding details you want Weds & Vows to understand from day one.
+          </p>
+        </div>
+
+        <form class="feedback-form" id="feedback-form" novalidate>
+          <div class="form-grid">
+            <label>
+              <span>Name</span>
+              <input name="name" autocomplete="name" required />
+              <small data-error-for="name"></small>
+            </label>
+
+            <label>
+              <span>Email</span>
+              <input name="email" type="email" autocomplete="email" required />
+              <small data-error-for="email"></small>
+            </label>
+          </div>
+
+          <label>
+            <span>Phone number <em>(optional)</em></span>
+            <input name="phone" type="tel" autocomplete="tel" />
+            <small data-error-for="phone"></small>
+          </label>
+
+          <fieldset>
+            <legend>Are you planning to have a wedding soon?</legend>
+            <div class="radio-row">
+              <label><input type="radio" name="weddingSoon" value="yes" required /> Yes</label>
+              <label><input type="radio" name="weddingSoon" value="not-sure" /> Not sure yet</label>
+              <label><input type="radio" name="weddingSoon" value="no" /> No</label>
+            </div>
+            <small data-error-for="weddingSoon"></small>
+          </fieldset>
+
+          <label>
+            <span>Suggestions or what you expect from an app like this</span>
+            <textarea
+              name="expectations"
+              rows="6"
+              required
+              placeholder="Example: vendor pricing, checklists, Sinhala/Tamil support, guest list tools, budget tracking..."
+            ></textarea>
+            <small data-error-for="expectations"></small>
+          </label>
+
+          <label class="hidden-field" aria-hidden="true">
+            Website
+            <input name="website" tabindex="-1" autocomplete="off" />
+          </label>
+
+          <button class="submit-button" type="submit">Send suggestion</button>
+          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p>wedsnvows.com</p>
+      <p>Launching in Sri Lanka by early August.</p>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
