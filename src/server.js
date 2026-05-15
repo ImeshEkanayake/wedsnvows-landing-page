@@ -17,6 +17,8 @@ const databaseUrl = process.env.DATABASE_URL || "";
 
 const app = express();
 let pool = null;
+let storageMode = "starting";
+let storageReadyPromise = null;
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "64kb" }));
@@ -80,7 +82,7 @@ async function initStorage() {
   if (databaseUrl) {
     pool = new pg.Pool({
       connectionString: databaseUrl,
-      ssl: process.env.PGSSL === "false" ? false : { rejectUnauthorized: false }
+      ssl: getPgSslConfig(databaseUrl)
     });
     await pool.query(`
       create table if not exists suggestions (
@@ -93,9 +95,24 @@ async function initStorage() {
         expectations text not null
       )
     `);
+    storageMode = "PostgreSQL";
     return;
   }
 
+  await initCsvStorage();
+  storageMode = `CSV at ${csvPath}`;
+}
+
+function getPgSslConfig(connectionString) {
+  const explicit = (process.env.PGSSL || "").toLowerCase();
+  if (explicit === "true") return { rejectUnauthorized: false };
+  if (explicit === "false") return false;
+  return connectionString.includes("sslmode=require")
+    ? { rejectUnauthorized: false }
+    : false;
+}
+
+async function initCsvStorage() {
   await fs.mkdir(dataDir, { recursive: true });
   try {
     await fs.access(csvPath);
@@ -105,6 +122,12 @@ async function initStorage() {
       "id,created_at,name,email,phone,wedding_soon,expectations\n",
       "utf8"
     );
+  }
+}
+
+async function ensureStorageReady() {
+  if (storageReadyPromise) {
+    await storageReadyPromise;
   }
 }
 
@@ -126,6 +149,8 @@ function toCsvRow(submission) {
 }
 
 async function saveSubmission(submission) {
+  await ensureStorageReady();
+
   if (pool) {
     await pool.query(
       `insert into suggestions
@@ -164,6 +189,8 @@ function assertAdmin(req, res) {
 }
 
 async function exportCsv() {
+  await ensureStorageReady();
+
   if (!pool) {
     try {
       return await fs.readFile(csvPath, "utf8");
@@ -193,7 +220,7 @@ async function exportCsv() {
 }
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, storage: storageMode });
 });
 
 app.post("/api/suggestions", async (req, res, next) => {
@@ -232,8 +259,13 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ ok: false, error: "Something went wrong. Please try again." });
 });
 
-await initStorage();
+storageReadyPromise = initStorage().catch(async (error) => {
+  console.error("Primary storage failed to initialize. Falling back to CSV.", error);
+  pool = null;
+  await initCsvStorage();
+  storageMode = `CSV fallback at ${csvPath}`;
+});
+
 app.listen(port, () => {
-  const storage = pool ? "PostgreSQL" : `CSV at ${csvPath}`;
-  console.log(`Weds & Vows listening on port ${port}. Storage: ${storage}`);
+  console.log(`Weds & Vows listening on port ${port}. Storage: ${storageMode}`);
 });
