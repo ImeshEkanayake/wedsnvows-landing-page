@@ -11,7 +11,8 @@ const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.join(rootDir, "public");
 const dataDir = process.env.DATA_DIR || path.join(rootDir, "data");
 const csvPath = path.join(dataDir, "submissions.csv");
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT || 8080);
+const host = process.env.HOST || "0.0.0.0";
 const adminToken = process.env.ADMIN_TOKEN || "";
 const databaseUrl = process.env.DATABASE_URL || "";
 
@@ -282,6 +283,6 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ ok: false, error: "Something went wrong. Please try again." });
 });
 
-app.listen(port, () => {
-  console.log(`Weds & Vows listening on port ${port}. Storage: ${storageMode}`);
+app.listen(port, host, () => {
+  console.log(`Weds & Vows listening on ${host}:${port}. Storage: ${storageMode}`);
 });
