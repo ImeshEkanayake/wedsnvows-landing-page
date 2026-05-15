@@ -17,7 +17,7 @@ const databaseUrl = process.env.DATABASE_URL || "";
 
 const app = express();
 let pool = null;
-let storageMode = "starting";
+let storageMode = "not initialized";
 let storageReadyPromise = null;
 
 app.disable("x-powered-by");
@@ -82,25 +82,46 @@ async function initStorage() {
   if (databaseUrl) {
     pool = new pg.Pool({
       connectionString: databaseUrl,
-      ssl: getPgSslConfig(databaseUrl)
+      ssl: getPgSslConfig(databaseUrl),
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 10000
     });
-    await pool.query(`
-      create table if not exists suggestions (
-        id uuid primary key,
-        created_at timestamptz not null,
-        name text not null,
-        email text not null,
-        phone text,
-        wedding_soon text not null,
-        expectations text not null
-      )
-    `);
-    storageMode = "PostgreSQL";
-    return;
+    try {
+      await withTimeout(
+        pool.query(`
+          create table if not exists suggestions (
+            id uuid primary key,
+            created_at timestamptz not null,
+            name text not null,
+            email text not null,
+            phone text,
+            wedding_soon text not null,
+            expectations text not null
+          )
+        `),
+        5000,
+        "PostgreSQL initialization timed out"
+      );
+      storageMode = "PostgreSQL";
+      return;
+    } catch (error) {
+      console.error("PostgreSQL storage failed. Falling back to CSV.", error);
+      await pool.end().catch(() => {});
+      pool = null;
+    }
   }
 
   await initCsvStorage();
   storageMode = `CSV at ${csvPath}`;
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
 function getPgSslConfig(connectionString) {
@@ -126,9 +147,11 @@ async function initCsvStorage() {
 }
 
 async function ensureStorageReady() {
-  if (storageReadyPromise) {
-    await storageReadyPromise;
+  if (!storageReadyPromise) {
+    storageReadyPromise = initStorage();
   }
+
+  await storageReadyPromise;
 }
 
 function csvEscape(value) {
@@ -220,7 +243,7 @@ async function exportCsv() {
 }
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, storage: storageMode });
+  res.status(200).send("ok");
 });
 
 app.post("/api/suggestions", async (req, res, next) => {
@@ -257,13 +280,6 @@ app.get("/admin/submissions.csv", async (req, res, next) => {
 app.use((error, _req, res, _next) => {
   console.error(error);
   res.status(500).json({ ok: false, error: "Something went wrong. Please try again." });
-});
-
-storageReadyPromise = initStorage().catch(async (error) => {
-  console.error("Primary storage failed to initialize. Falling back to CSV.", error);
-  pool = null;
-  await initCsvStorage();
-  storageMode = `CSV fallback at ${csvPath}`;
 });
 
 app.listen(port, () => {
